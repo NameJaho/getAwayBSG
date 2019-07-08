@@ -1,8 +1,12 @@
 #MongoDB 连接URL
-dburl: mongodb://localhost:27017
+dburl: mongodb://jiangwei:78667602@127.0.0.1:27017
 
 # MongoDB 数据库名
 dbDatabase: pachong
+
+# 抓取状态记录，这个库不可改名，如果启用了权限管理需要添加这个库的权限
+collyDatabase: colly
+
 
 # MongoDB 集合名
 # 存链家的数据

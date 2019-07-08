@@ -30,7 +30,7 @@ func crawlerOneCity(cityUrl string) {
 	configInfo := configs.Config()
 	storage := &cachemongo.Storage{
 		Database: "colly",
-		URI:      configInfo["dburl"].(string),
+		URI:      configInfo["dburl"].(string) + "/colly",
 	}
 
 	if err := c.SetStorage(storage); err != nil {
@@ -177,22 +177,26 @@ func crawlDetail() (sucnum int) {
 		fmt.Print("数据库连接失败！")
 		fmt.Println(err)
 	}
-	db := client.Database(configInfo["dbDatabase"].(string))
-	lianjia := db.Collection(configInfo["dbCollection"].(string))
+	odb := client.Database(configInfo["dbDatabase"].(string))
+	lianjia := odb.Collection(configInfo["dbCollection"].(string))
 
-	cur, _ := lianjia.Find(ctx, bson.M{"detailCrawlTime": bson.M{"$exists": false}})
-	defer cur.Close(ctx)
+	cur, err := lianjia.Find(ctx, bson.M{"detailCrawlTime": bson.M{"$exists": false}})
 
-	for cur.Next(ctx) {
-		var item bson.M
-		if err := cur.Decode(&item); err != nil {
-			fmt.Print("数据库读取失败！")
-			fmt.Println(err)
-		} else {
-			sucnum++
-			c.Visit(item["Link"].(string))
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		defer cur.Close(ctx)
+		for cur.Next(ctx) {
+			var item bson.M
+			if err := cur.Decode(&item); err != nil {
+				fmt.Print("数据库读取失败！")
+				fmt.Println(err)
+			} else {
+				sucnum++
+				c.Visit(item["Link"].(string))
+			}
+
 		}
-
 	}
 
 	return sucnum
