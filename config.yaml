@@ -1,5 +1,5 @@
 #MongoDB 连接URL
-dburl: mongodb://jiangwei:78667602@127.0.0.1:27017
+dburl: mongodb://127.0.0.1:27017
 
 # MongoDB 数据库名
 dbDatabase: pachong
