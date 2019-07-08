@@ -8,6 +8,7 @@ import (
 	"getAwayBSG/db"
 	"github.com/gocolly/colly"
 	"github.com/gocolly/colly/extensions"
+	cachemongo "github.com/zolamk/colly-mongo-storage/colly/mongo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -26,6 +27,15 @@ func crawlerOneCity(cityUrl string) {
 	c := colly.NewCollector()
 	extensions.RandomUserAgent(c)
 	extensions.Referer(c)
+	configInfo := configs.Config()
+	storage := &cachemongo.Storage{
+		Database: "colly",
+		URI:      configInfo["dburl"].(string),
+	}
+
+	if err := c.SetStorage(storage); err != nil {
+		panic(err)
+	}
 
 	c.OnHTML("#position a", func(element *colly.HTMLElement) {
 		u, err := url.Parse(cityUrl)
@@ -111,6 +121,14 @@ func crawlDetail() (sucnum int) {
 	c := colly.NewCollector()
 	extensions.RandomUserAgent(c)
 	extensions.Referer(c)
+	configInfo := configs.Config()
+	storage := &cachemongo.Storage{
+		Database: "colly",
+		URI:      configInfo["dburl"].(string),
+	}
+	if err := c.SetStorage(storage); err != nil {
+		panic(err)
+	}
 	c.OnHTML(".area .mainInfo", func(element *colly.HTMLElement) {
 		area := strings.Replace(element.Text, "平米", "", 1)
 		iArea, err := strconv.Atoi(area)
@@ -151,7 +169,6 @@ func crawlDetail() (sucnum int) {
 		fmt.Println("详情抓取：", r.URL.String())
 	})
 
-	configInfo := configs.Config()
 	client, _ := mongo.NewClient(options.Client().ApplyURI(configInfo["dburl"].(string)))
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err := client.Connect(ctx)

@@ -35,7 +35,7 @@ func Update(link string, m bson.M) {
 	lianjia := db.Collection(configInfo["dbCollection"].(string))
 	_, err := lianjia.UpdateOne(ctx, bson.M{"Link": link}, bson.M{"$set": m})
 	if err != nil {
-		fmt.Print("update error!")
+		fmt.Print("数据库更新出错！")
 		fmt.Println(err)
 	}
 }
@@ -68,17 +68,23 @@ func AddZLItem(items []interface{}) {
 			salary = strings.Replace(salary.(string), "W", "", 2)
 			salary = strings.Replace(salary.(string), "千", "", 2)
 			salary = strings.Replace(salary.(string), "万", "", 2)
+			salary = strings.Replace(salary.(string), "以下", "", 2)
 			minAndMax := strings.Split(salary.(string), "-")
-			fmt.Println(salary)
-			fmt.Println(minAndMax)
+
 			min, err := strconv.ParseFloat(minAndMax[0], 32)
 			if err != nil {
 				min = 0
 			}
-			max, err := strconv.ParseFloat(minAndMax[1], 32)
-			if err != nil {
-				max = 0
+			var max float64
+			if len(minAndMax) > 1 {
+				max, err = strconv.ParseFloat(minAndMax[1], 32)
+				if err != nil {
+					max = 0
+				}
+			} else {
+				max = min
 			}
+
 			min = min * xishu
 			max = max * xishu
 			avg := (min + max) / 2
