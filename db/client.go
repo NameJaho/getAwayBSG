@@ -99,3 +99,11 @@ func SetZhilianStatus(cityIndex int, kwIndex int) {
 	lianjia_status.DeleteMany(ctx, bson.M{})
 	lianjia_status.InsertOne(ctx, bson.M{"city_index": cityIndex, "kw_index": kwIndex})
 }
+
+func GetCtx() context.Context {
+	return GetInstance().ctx
+}
+
+func GetClient() *mongo.Client {
+	return GetInstance().client
+}

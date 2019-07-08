@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"getAwayBSG/configs"
@@ -10,8 +9,6 @@ import (
 	"github.com/gocolly/colly/extensions"
 	cachemongo "github.com/zolamk/colly-mongo-storage/colly/mongo"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"net/url"
 	"strconv"
 	"strings"
@@ -125,7 +122,7 @@ func crawlDetail() (sucnum int) {
 	configInfo := configs.Config()
 	storage := &cachemongo.Storage{
 		Database: "colly",
-		URI:      configInfo["dburl"].(string),
+		URI:      configInfo["dburl"].(string) + "/colly",
 	}
 	if err := c.SetStorage(storage); err != nil {
 		panic(err)
@@ -170,13 +167,9 @@ func crawlDetail() (sucnum int) {
 		fmt.Println("详情抓取：", r.URL.String())
 	})
 
-	client, _ := mongo.NewClient(options.Client().ApplyURI(configInfo["dburl"].(string)))
-	ctx, _ := context.WithTimeout(context.Background(), 24*365*time.Hour)
-	err := client.Connect(ctx)
-	if err != nil {
-		fmt.Print("数据库连接失败！")
-		fmt.Println(err)
-	}
+	client := db.GetClient()
+	ctx := db.GetCtx()
+
 	odb := client.Database(configInfo["dbDatabase"].(string))
 	lianjia := odb.Collection(configInfo["dbCollection"].(string))
 
