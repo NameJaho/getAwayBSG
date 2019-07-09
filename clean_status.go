@@ -10,9 +10,9 @@ import (
 func main() {
 
 	var choice int
-	if strings.Index(os.Args[1], "lianjia") > -1 {
+	if len(os.Args) > 1 && strings.Index(os.Args[1], "lianjia") > -1 {
 		choice = 1
-	} else if strings.Index(os.Args[1], "zhilian") > -1 {
+	} else if len(os.Args) > 1 && strings.Index(os.Args[1], "zhilian") > -1 {
 		choice = 2
 	} else {
 		fmt.Println("清除抓取状态（不清除状态的话爬虫会从上次停止位置继续抓取）")
