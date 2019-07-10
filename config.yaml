@@ -17,6 +17,12 @@ dbCollection: lianjia
 # 自己添加positionURL 字段的唯一键，不然有重复
 zlDBCollection: zhilian
 
+# 代理列表
+# 注释掉则不使用代理
+proxyList:
+  - socks5://127.0.0.1:1080
+
+
 
 # 智联招聘平台爬取关键词
 zlKeyWords:
@@ -38,7 +44,7 @@ zlKeyWords:
 # 需要抓取房价城市
 cityList:
    - https://cd.lianjia.com/ershoufang/               #成都
-   - https://bj.lianjia.com/ershoufang/               #北京
+#  - https://bj.lianjia.com/ershoufang/               #北京
 #  - https://aq.lianjia.com/ershoufang/               #安庆
 #  - https://cz.fang.lianjia.com/ershoufang/               #滁州
 #  - https://hf.lianjia.com/ershoufang/               #合肥
