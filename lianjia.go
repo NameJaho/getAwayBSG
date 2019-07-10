@@ -49,7 +49,7 @@ func crawlerOneCity(cityUrl string) {
 		panic(err)
 	}
 
-	c.OnHTML("#position a", func(element *colly.HTMLElement) {
+	c.OnHTML(".position a", func(element *colly.HTMLElement) {
 		u, err := url.Parse(cityUrl)
 		if err != nil {
 			panic(err)
@@ -66,7 +66,6 @@ func crawlerOneCity(cityUrl string) {
 		} else {
 			goUrl = u.String()
 		}
-
 		c.Visit(goUrl)
 
 	})
