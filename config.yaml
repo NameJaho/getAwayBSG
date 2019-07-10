@@ -18,9 +18,10 @@ dbCollection: lianjia
 zlDBCollection: zhilian
 
 # 代理列表
-# 注释掉则不使用代理
-proxyList:
-  - socks5://127.0.0.1:1080
+# 注释掉则不使用代理(不使用代理偶尔被封，偶尔没事，抓慢点好像就没问题，我树莓派上面没问题，电脑上可能是太快了，会被封)
+#proxyList:
+#  - socks5://127.0.0.1:1080
+#  - http://127.0.0.1:8118
 
 
 
