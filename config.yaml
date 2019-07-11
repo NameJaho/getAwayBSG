@@ -44,7 +44,7 @@ zlKeyWords:
 # ！！！请尽量为被爬方考虑，不要抓全站，配置你需要抓取的城市即可！
 # 需要抓取房价城市
 cityList:
-   - https://cd.lianjia.com/ershoufang/               #成都
+  - https://cd.lianjia.com/ershoufang/               #成都
 #  - https://bj.lianjia.com/ershoufang/               #北京
 #  - https://aq.lianjia.com/ershoufang/               #安庆
 #  - https://cz.fang.lianjia.com/ershoufang/               #滁州
