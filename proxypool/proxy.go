@@ -18,19 +18,19 @@ type proxyPool struct {
 
 func (r *proxyPool) GetProxy(pr *http.Request) (*url.URL, error) {
 	// 从配置文件读取代理，可以修改返回，从其他地方获取代理，比如代理池
-	//if len(r.proxyURLs) > 0 {
-	proxyLink := r.proxyURLs[rand.Intn(len(r.proxyURLs))]
-	// 将代理写入上下文
-	ctx := context.WithValue(pr.Context(), colly.ProxyURLKey, proxyLink)
-	*pr = *pr.WithContext(ctx)
-	return proxyLink, nil
-	//} else {
-	//	proxyLink, ip := getOneProxy()
-	//	// 将代理写入上下文
-	//	ctx := context.WithValue(pr.Context(), colly.ProxyURLKey, ip)
-	//	*pr = *pr.WithContext(ctx)
-	//	return url.Parse(proxyLink)
-	//}
+	if len(r.proxyURLs) > 0 {
+		proxyLink := r.proxyURLs[rand.Intn(len(r.proxyURLs))]
+		// 将代理写入上下文
+		ctx := context.WithValue(pr.Context(), colly.ProxyURLKey, proxyLink)
+		*pr = *pr.WithContext(ctx)
+		return proxyLink, nil
+	} else {
+		proxyLink, ip := getOneProxy()
+		// 将代理写入上下文
+		ctx := context.WithValue(pr.Context(), colly.ProxyURLKey, ip)
+		*pr = *pr.WithContext(ctx)
+		return url.Parse(proxyLink)
+	}
 
 }
 
@@ -44,8 +44,10 @@ func GetProxyPool() (colly.ProxyFunc, error) {
 				proxyURLs = append(proxyURLs, urlLink)
 			}
 		}
+
 	}
 	return (&proxyPool{proxyURLs: proxyURLs}).GetProxy, nil
+
 }
 
 func getOneProxy() (string, string) {
