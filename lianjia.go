@@ -127,6 +127,7 @@ func listCrawler() {
 func crawlDetail() (sucnum int) {
 	sucnum = 0
 	c := colly.NewCollector()
+	c.AllowURLRevisit = true
 	configInfo := configs.Config()
 
 	rp, err := proxypool.GetProxyPool()
@@ -163,6 +164,7 @@ func crawlDetail() (sucnum int) {
 		res := strings.Replace(element.Text, "二手房", "", 99)
 		res = strings.Replace(res, " ", "", 99)
 		address := strings.Split(res, ">")
+		fmt.Println(address)
 		db.Update(element.Request.URL.String(), bson.M{"address": address[1 : len(address)-1], "detailCrawlTime": time.Now()})
 	})
 
@@ -190,22 +192,16 @@ func crawlDetail() (sucnum int) {
 	odb := client.Database(configInfo["dbDatabase"].(string))
 	lianjia := odb.Collection(configInfo["dbCollection"].(string))
 
-	cur, err := lianjia.Find(ctx, bson.M{"detailCrawlTime": bson.M{"$exists": false}})
-
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		defer cur.Close(ctx)
-		for cur.Next(ctx) {
-			var item bson.M
-			if err := cur.Decode(&item); err != nil {
-				fmt.Print("数据库读取失败！")
-				fmt.Println(err)
-			} else {
-				sucnum++
-				c.Visit(item["Link"].(string))
-			}
-
+	for {
+		cur := lianjia.FindOne(ctx, bson.M{"detailCrawlTime": bson.M{"$exists": false}})
+		var item bson.M
+		if err := cur.Decode(&item); err != nil {
+			fmt.Print("数据库读取失败！")
+			fmt.Println(err)
+			break
+		} else {
+			sucnum++
+			c.Visit(item["Link"].(string))
 		}
 	}
 
