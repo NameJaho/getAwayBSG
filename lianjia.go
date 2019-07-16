@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"getAwayBSG/configs"
 	"getAwayBSG/db"
-	"getAwayBSG/proxypool"
 	"github.com/gocolly/colly"
 	"github.com/gocolly/colly/extensions"
+	"github.com/gocolly/colly/proxy"
 	cachemongo "github.com/zolamk/colly-mongo-storage/colly/mongo"
 	"go.mongodb.org/mongo-driver/bson"
 	"net/url"
@@ -25,11 +25,20 @@ type Page struct {
 func crawlerOneCity(cityUrl string) {
 	c := colly.NewCollector()
 	configInfo := configs.Config()
-	rp, err := proxypool.GetProxyPool()
-	if err != nil {
-		fmt.Println(err)
+	if configInfo["proxyList"] != nil && len(configInfo["proxyList"].([]interface{})) > 0 {
+		var proxyList []string
+		for _, v := range configInfo["proxyList"].([]interface{}) {
+			proxyList = append(proxyList, v.(string))
+		}
+
+		if configInfo["proxyList"] != nil {
+			rp, err := proxy.RoundRobinProxySwitcher(proxyList...)
+			if err != nil {
+				fmt.Println(err)
+			}
+			c.SetProxyFunc(rp)
+		}
 	}
-	c.SetProxyFunc(rp)
 	extensions.RandomUserAgent(c)
 	extensions.Referer(c)
 	storage := &cachemongo.Storage{
@@ -127,14 +136,22 @@ func listCrawler() {
 func crawlDetail() (sucnum int) {
 	sucnum = 0
 	c := colly.NewCollector()
-	c.AllowURLRevisit = true
 	configInfo := configs.Config()
 
-	rp, err := proxypool.GetProxyPool()
-	if err != nil {
-		fmt.Println(err)
+	if configInfo["proxyList"] != nil && len(configInfo["proxyList"].([]interface{})) > 0 {
+		var proxyList []string
+		for _, v := range configInfo["proxyList"].([]interface{}) {
+			proxyList = append(proxyList, v.(string))
+		}
+
+		if configInfo["proxyList"] != nil {
+			rp, err := proxy.RoundRobinProxySwitcher(proxyList...)
+			if err != nil {
+				fmt.Println(err)
+			}
+			c.SetProxyFunc(rp)
+		}
 	}
-	c.SetProxyFunc(rp)
 
 	extensions.RandomUserAgent(c)
 	extensions.Referer(c)
@@ -164,7 +181,6 @@ func crawlDetail() (sucnum int) {
 		res := strings.Replace(element.Text, "二手房", "", 99)
 		res = strings.Replace(res, " ", "", 99)
 		address := strings.Split(res, ">")
-		fmt.Println(address)
 		db.Update(element.Request.URL.String(), bson.M{"address": address[1 : len(address)-1], "detailCrawlTime": time.Now()})
 	})
 
@@ -186,27 +202,28 @@ func crawlDetail() (sucnum int) {
 		fmt.Println("详情抓取：", r.URL.String())
 	})
 
-	c.OnError(func(response *colly.Response, e error) {
-		fmt.Println(response.Request.ProxyURL)
-		fmt.Println(e.Error())
-	})
-
 	client := db.GetClient()
 	ctx := db.GetCtx()
 
 	odb := client.Database(configInfo["dbDatabase"].(string))
 	lianjia := odb.Collection(configInfo["dbCollection"].(string))
 
-	for {
-		cur := lianjia.FindOne(ctx, bson.M{"detailCrawlTime": bson.M{"$exists": false}})
-		var item bson.M
-		if err := cur.Decode(&item); err != nil {
-			fmt.Print("数据库读取失败！")
-			fmt.Println(err)
-			break
-		} else {
-			sucnum++
-			c.Visit(item["Link"].(string))
+	cur, err := lianjia.Find(ctx, bson.M{"detailCrawlTime": bson.M{"$exists": false}})
+
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		defer cur.Close(ctx)
+		for cur.Next(ctx) {
+			var item bson.M
+			if err := cur.Decode(&item); err != nil {
+				fmt.Print("数据库读取失败！")
+				fmt.Println(err)
+			} else {
+				sucnum++
+				c.Visit(item["Link"].(string))
+			}
+
 		}
 	}
 
