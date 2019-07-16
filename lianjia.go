@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"getAwayBSG/configs"
 	"getAwayBSG/db"
+	"getAwayBSG/proxypool"
 	"github.com/gocolly/colly"
 	"github.com/gocolly/colly/extensions"
-	"github.com/gocolly/colly/proxy"
 	cachemongo "github.com/zolamk/colly-mongo-storage/colly/mongo"
 	"go.mongodb.org/mongo-driver/bson"
 	"net/url"
@@ -25,20 +25,11 @@ type Page struct {
 func crawlerOneCity(cityUrl string) {
 	c := colly.NewCollector()
 	configInfo := configs.Config()
-	if configInfo["proxyList"] != nil && len(configInfo["proxyList"].([]interface{})) > 0 {
-		var proxyList []string
-		for _, v := range configInfo["proxyList"].([]interface{}) {
-			proxyList = append(proxyList, v.(string))
-		}
-
-		if configInfo["proxyList"] != nil {
-			rp, err := proxy.RoundRobinProxySwitcher(proxyList...)
-			if err != nil {
-				fmt.Println(err)
-			}
-			c.SetProxyFunc(rp)
-		}
+	rp, err := proxypool.GetProxyPool()
+	if err != nil {
+		fmt.Println(err)
 	}
+	c.SetProxyFunc(rp)
 	extensions.RandomUserAgent(c)
 	extensions.Referer(c)
 	storage := &cachemongo.Storage{
@@ -138,20 +129,11 @@ func crawlDetail() (sucnum int) {
 	c := colly.NewCollector()
 	configInfo := configs.Config()
 
-	if configInfo["proxyList"] != nil && len(configInfo["proxyList"].([]interface{})) > 0 {
-		var proxyList []string
-		for _, v := range configInfo["proxyList"].([]interface{}) {
-			proxyList = append(proxyList, v.(string))
-		}
-
-		if configInfo["proxyList"] != nil {
-			rp, err := proxy.RoundRobinProxySwitcher(proxyList...)
-			if err != nil {
-				fmt.Println(err)
-			}
-			c.SetProxyFunc(rp)
-		}
+	rp, err := proxypool.GetProxyPool()
+	if err != nil {
+		fmt.Println(err)
 	}
+	c.SetProxyFunc(rp)
 
 	extensions.RandomUserAgent(c)
 	extensions.Referer(c)
