@@ -186,6 +186,11 @@ func crawlDetail() (sucnum int) {
 		fmt.Println("详情抓取：", r.URL.String())
 	})
 
+	c.OnError(func(response *colly.Response, e error) {
+		fmt.Println(response.Request.ProxyURL)
+		fmt.Println(e.Error())
+	})
+
 	client := db.GetClient()
 	ctx := db.GetCtx()
 
